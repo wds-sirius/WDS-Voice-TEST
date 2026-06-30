@@ -1,0 +1,101 @@
+import { Sound, sound} from '@pixi/sound';
+import { AssetExtension, extensions, ExtensionType, checkExtension, LoaderParser, LoaderParserPriority, path, ResolvedAsset, DOMAdapter } from 'pixi.js';
+
+const loaderName : string = 'wds-voice-loader';
+
+interface IWDSVoiceMetadata {
+    mimeType? : string,
+}
+
+type WDSVoiceAsset = {
+    meta? : any,
+    bimary? : ArrayBuffer,
+    voice? : Record<string, Sound>,
+}
+
+const WDSVoiceParser : AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata> = {
+    extension: ExtensionType.Asset,
+    loader: {
+        name: loaderName,
+        extension: {
+            type: ExtensionType.LoadParser,
+            priority: LoaderParserPriority.Normal,
+            name: loaderName,
+        },
+
+        test(url: string): boolean
+        {
+            return checkExtension(url, ".wds") || checkExtension(url, ".cpk");
+        },
+
+        async load(url: string): Promise<ArrayBuffer>
+        {
+            const response = await DOMAdapter.get().fetch(url);
+            if (!response.ok)
+				throw new Error(`[${loaderName}] Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+
+            const arrayBuffer = await response.arrayBuffer();
+
+            return arrayBuffer
+        },
+
+        testParse (asset: unknown): Promise<boolean>{
+            const view = new DataView(asset as ArrayBuffer);
+            const jsonLength = view.getUint32(0, true);
+            
+            return Promise.resolve(jsonLength > 0);
+        },
+
+        async parse(asset: unknown, options: ResolvedAsset<IWDSVoiceMetadata>): Promise<WDSVoiceAsset>
+        {
+            const metadata: IWDSVoiceMetadata = options.data || {};
+
+            const view = new DataView(asset as ArrayBuffer);
+            const jsonLength = view.getUint32(0, true);
+            
+            const jsonUint8Array = new Uint8Array(asset as ArrayBuffer, 4, jsonLength);
+            const decoder = new TextDecoder('utf-8');
+            const indexTable = JSON.parse(decoder.decode(jsonUint8Array));
+
+            const audioBlockStartOffset = 4 + jsonLength;
+
+            const totalBlob = new Blob([asset as ArrayBuffer]);
+
+            const mimeType = metadata.mimeType || 'audio/mpeg';
+            const voiceMap : Record<string, Sound> = {};
+
+            for (const cueName in indexTable) {
+                const { offset, length } = indexTable[cueName];
+
+                // 絕對位置 = 音訊區塊起點 + 音訊自身的相對偏移量
+                const absoluteOffset = audioBlockStartOffset + offset;
+                
+                // 切片
+                const audioSegmentBlob = totalBlob.slice(absoluteOffset, absoluteOffset + length, mimeType);
+                const blobUrl = URL.createObjectURL(audioSegmentBlob);
+
+                // 註冊
+                voiceMap[cueName] = sound.add(cueName, blobUrl);
+            }
+
+            return {
+                meta: indexTable,
+                // bimary: asset as ArrayBuffer,
+                voice: voiceMap
+            };
+        },
+
+        /** Remove the sound from the library */
+        async unload(vAsset: WDSVoiceAsset, asset: ResolvedAsset): Promise<void>
+        {
+            vAsset.meta && Object.keys(vAsset.meta).forEach((cueName) => {
+                if (sound.exists(cueName)) {
+                    sound.remove(cueName);
+                }
+            });
+        }
+
+    } as LoaderParser<ArrayBuffer, IWDSVoiceMetadata>,
+} as AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata>;
+
+extensions.add(WDSVoiceParser);
