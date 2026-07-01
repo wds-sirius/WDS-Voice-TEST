@@ -8,9 +8,9 @@ interface IWDSVoiceMetadata {
 }
 
 type WDSVoiceAsset = {
-    meta? : any,
+    meta : any,
     bimary? : ArrayBuffer,
-    voice? : Record<string, Sound>,
+    voice : Record<string, Sound>,
 }
 
 const WDSVoiceParser : AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata> = {
@@ -36,14 +36,13 @@ const WDSVoiceParser : AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata> = {
 
             const arrayBuffer = await response.arrayBuffer();
 
-            return arrayBuffer
+            return arrayBuffer;
         },
 
-        testParse (asset: unknown): Promise<boolean>{
-            const view = new DataView(asset as ArrayBuffer);
-            const jsonLength = view.getUint32(0, true);
-            
-            return Promise.resolve(jsonLength > 0);
+        testParse (asset: unknown, options: ResolvedAsset): Promise<boolean>{
+            const isWDS = checkExtension(options.src as string, '.wds');
+            const isCPK = checkExtension(options.src as string, '.cpk');
+            return Promise.resolve(isWDS || isCPK)
         },
 
         async parse(asset: unknown, options: ResolvedAsset<IWDSVoiceMetadata>): Promise<WDSVoiceAsset>
@@ -74,8 +73,14 @@ const WDSVoiceParser : AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata> = {
                 const audioSegmentBlob = totalBlob.slice(absoluteOffset, absoluteOffset + length, mimeType);
                 const blobUrl = URL.createObjectURL(audioSegmentBlob);
 
+                const soundObj = Sound.from({
+                    ...options.data,
+                    url : blobUrl,
+                    preload: true,
+                })
+
                 // 註冊
-                voiceMap[cueName] = sound.add(cueName, blobUrl);
+                voiceMap[cueName] = sound.add(cueName, soundObj);
             }
 
             return {
@@ -95,7 +100,7 @@ const WDSVoiceParser : AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata> = {
             });
         }
 
-    } as LoaderParser<ArrayBuffer, IWDSVoiceMetadata>,
+    } as LoaderParser<WDSVoiceAsset, IWDSVoiceMetadata>,
 } as AssetExtension<WDSVoiceAsset, IWDSVoiceMetadata>;
 
 extensions.add(WDSVoiceParser);

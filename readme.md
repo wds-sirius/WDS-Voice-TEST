@@ -17,13 +17,18 @@
 2. **Index Table**：儲存每個音效的名稱（Cue）、位元組偏移量（Offset）與大小（Length）。
 3. **Binary Audio Payload**：所有音訊依 4 位元組對齊首尾拼接的原始數據。
 
-<!-- --- -->
+---
 
 ## 合併使用方法
 
 ### 打包方法 (Python)
 
-大概過程 : acb -> wav -> packerInOne.py
+大概過程 : 
+
+```mermaid
+graph LR
+    A(.acb) --vgmstream--> B(.wav) --changetomp3.py--> C(.mp3) --packerInOne.py--> D(.wds) 
+```
 
 [`packer.py`](./script/packer.py) : 會匯出一個檔以及一個JSON索引表檔案
 

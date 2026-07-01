@@ -17,7 +17,8 @@ if os.path.exists(input_dir):
             full_wav_path = os.path.join(input_dir, wavfile)
             print(f"Converting {full_wav_path} to mp3...")
             sound = AudioSegment.from_wav(full_wav_path)
-            sound.export(os.path.join(mp3_output_dir, wavfile.replace('.wav', '.mp3')), format="mp3", codec="libmp3lame", bitrate="64k")
+            mono_sound = sound.set_channels(1)
+            mono_sound.export(os.path.join(mp3_output_dir, wavfile.replace('.wav', '.mp3')), format="mp3", codec="libmp3lame", bitrate="64k", parameters=["-ar", "48000"])
             # manifest.append(wavfile.split('.wav')[0])
 
 # manifest_data = json.dumps(manifest, indent=4, ensure_ascii=False)

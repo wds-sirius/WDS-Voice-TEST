@@ -41,6 +41,7 @@ document.body.appendChild(button);
 
 // Vanilla 版本 (HTMLAudioElement)
 import { HTMLAudioPackLoader } from './VanillaLoader';
+
 const audioManager = new HTMLAudioPackLoader();
 await audioManager.loadPack('audio_bundle.cpk', 'audio/mpeg');
 
@@ -48,6 +49,6 @@ const button = document.createElement('button');
 button.textContent = '播放音效';
 button.addEventListener('click', () => {
   console.log('播放音效');
-  audioManager.play('1100110020', { loop: false, volume: 1.0 });
+  audioManager.play('1100110010', { loop: false, volume: 1.0 });
 });
 document.body.appendChild(button);
