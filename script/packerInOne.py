@@ -3,7 +3,7 @@ import json
 import struct
 
 def pack_all_in_one(input_folder, output_package_path):
-    valid_extensions = ('.ogg', '.mp3', '.wav')
+    valid_extensions = ('.ogg', '.mp3', '.m4a', '.wav')
     audio_files = [f for f in os.listdir(input_folder) if f.endswith(valid_extensions)]
     audio_files.sort()
     

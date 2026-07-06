@@ -2,7 +2,7 @@ import os
 import json
 
 def pack_audio_files(input_folder, output_bin_path, output_json_path):
-    valid_extensions = ('.ogg', '.mp3', '.wav')
+    valid_extensions = ('.ogg', '.mp3', '.m4a', '.wav')
     
     audio_files = [f for f in os.listdir(input_folder) if f.endswith(valid_extensions)]
     audio_files.sort() # 確保順序一致
@@ -42,6 +42,5 @@ def pack_audio_files(input_folder, output_bin_path, output_json_path):
     print(f"索引檔: {output_json_path}")
     print(f"數據包: {output_bin_path}")
 
-# 使用範例
 if __name__ == "__main__":
-    pack_audio_files('audio_mp3', './audio_bank.bin', './audio_index.json')
+    pack_audio_files('audio_mp3', './audio_bank.wds', './audio_index.json')

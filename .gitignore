@@ -24,4 +24,4 @@ dist-ssr
 *.sw?
 
 script/ffmpeg.exe
-script/audio_mp3
+script/audio_*
